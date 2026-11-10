@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mine Dump Management Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bg:#0b1220;--panel:#111c2e;--panel2:#16243a;--line:#26364d;--muted:#91a3bb;--text:#e8eef7;--green:#36c982;--blue:#56a8ff;--amber:#f5b942;--red:#f16f72}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px Inter,Arial,sans-serif}button,input,select{font:inherit}
+.app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}.sidebar{background:#0d1727;border-right:1px solid var(--line);padding:22px 16px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:11px;padding:4px 8px 25px}.brand-icon{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#1b9d68,#42d99a);display:grid;place-items:center;font-weight:900;color:#061b13}.brand strong{font-size:13px;letter-spacing:.5px}.brand small{display:block;color:var(--muted);font-size:10px;margin-top:4px}
+.nav-label{font-size:10px;color:#63748d;letter-spacing:1.5px;padding:13px 10px 8px}.nav button{width:100%;text-align:left;border:0;background:transparent;color:#a9b8cb;padding:11px 12px;border-radius:9px;margin:2px 0;cursor:pointer;display:flex;gap:11px;align-items:center}.nav button.active,.nav button:hover{background:#1a2a40;color:white}.nav button.active{box-shadow:inset 3px 0 var(--green)}.nav .ico{width:18px;text-align:center;color:var(--green)}
+.side-bottom{position:absolute;bottom:18px;left:16px;right:16px;background:#14243a;border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--muted);font-size:11px}
+main{min-width:0}.topbar{height:72px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#0d1727;position:sticky;top:0;z-index:10}.crumb{font-weight:700}.crumb small{display:block;color:var(--muted);font-weight:400;font-size:11px;margin-top:4px}.top-actions{display:flex;align-items:center;gap:9px}.pill{border:1px solid var(--line);background:#142239;color:#b9c8da;padding:8px 11px;border-radius:8px;font-size:11px}.status{color:var(--green);font-size:11px}.content{padding:25px 28px 40px;max-width:1600px;margin:auto}.page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:20px}.page-head h1{margin:0;font-size:23px}.page-head p{color:var(--muted);margin:7px 0 0;font-size:12px}.filters{display:flex;flex-wrap:wrap;gap:8px}.filters select,.filters input,.field input,.field select{background:#142239;border:1px solid var(--line);color:var(--text);padding:9px 10px;border-radius:8px;outline:none}.grid{display:grid;gap:14px}.kpis{grid-template-columns:repeat(5,minmax(0,1fr));margin-bottom:15px}.card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:16px;min-width:0}.kpi-top{display:flex;justify-content:space-between;color:var(--muted);font-size:11px}.kpi-icon{color:var(--green);font-size:17px}.kpi-value{font-size:25px;font-weight:800;margin:12px 0 5px;letter-spacing:-.6px}.kpi-foot{font-size:10px;color:var(--muted)}.positive{color:var(--green)}.warning{color:var(--amber)}.negative{color:var(--red)}.two{grid-template-columns:1.5fr 1fr;margin-bottom:14px}.three{grid-template-columns:1fr 1fr 1fr}.card-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;font-weight:700;font-size:13px}.card-title small{color:var(--muted);font-weight:400;font-size:10px}.chart-wrap{height:255px;position:relative}.chart-wrap.short{height:210px}.progress-row{margin:17px 0}.progress-label{display:flex;justify-content:space-between;font-size:11px;margin-bottom:8px}.bar{height:8px;background:#25364c;border-radius:9px;overflow:hidden}.bar span{display:block;height:100%;border-radius:9px;background:var(--green)}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:11px}th{text-align:left;color:#91a3bb;font-weight:600;background:#15243a}td,th{padding:11px 12px;border-bottom:1px solid #24344a}td{color:#d5dfeb}.tag{padding:4px 7px;border-radius:20px;font-size:9px;background:#173d32;color:#64dfa3}.tag.warn{background:#49391b;color:#ffd071}.tag.bad{background:#48272d;color:#ff9b9e}.hidden{display:none!important}#map{height:410px;border-radius:9px;overflow:hidden;background:#17263b}#scene{height:410px;border-radius:9px;background:radial-gradient(ellipse at center,#203b4a,#0b1524);overflow:hidden;position:relative}.scene-note{position:absolute;bottom:12px;left:12px;background:#091321cc;padding:8px 10px;border-radius:7px;font-size:10px;color:#c3d0df}.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.field{display:flex;flex-direction:column;gap:6px}.field label{font-size:10px;color:var(--muted)}.field input,.field select{width:100%}.btn{border:0;border-radius:8px;padding:10px 14px;background:var(--green);color:#062116;font-weight:700;cursor:pointer}.btn.secondary{background:#21344d;color:#dbe6f2;border:1px solid var(--line)}.btn.danger{background:#542b32;color:#ffb7ba}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.empty{padding:25px;text-align:center;color:var(--muted)}.footer-note{font-size:10px;color:#71839a;margin-top:12px;line-height:1.5}.mobile-menu{display:none}
+@media(max-width:1050px){.app{grid-template-columns:210px 1fr}.kpis{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.three{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.app{display:block}.sidebar{display:none;position:fixed;z-index:30;width:250px}.sidebar.open{display:block}.topbar{height:62px;padding:0 14px}.mobile-menu{display:inline-block;background:none;color:white;border:0;font-size:22px}.top-actions .pill:nth-child(2){display:none}.content{padding:18px 13px 30px}.page-head{display:block}.filters{margin-top:14px}.filters select{flex:1;min-width:120px}.kpis{gap:9px}.card{padding:13px}.kpi-value{font-size:20px}.three{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr 1fr}#map,#scene{height:330px}.page-head h1{font-size:20px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar" id="sidebar">
+ <div class="brand"><div class="brand-icon">DM</div><div><strong>MINE DUMP MANAGEMENT</strong><small>ENGINEERING CONTROL SYSTEM</small></div></div>
+ <div class="nav-label">WORKSPACE</div>
+ <nav class="nav">
+  <button class="active" data-page="overview"><span class="ico">▦</span> Overview</button>
+  <button data-page="location"><span class="ico">⌖</span> Dump Location</button>
+  <button data-page="movement"><span class="ico">⇄</span> Material Movement</button>
+  <button data-page="capacity"><span class="ico">◉</span> Capacity Monitoring</button>
+  <button data-page="threeD"><span class="ico">◇</span> 3D Dump View</button>
+  <button data-page="database"><span class="ico">▤</span> Database Management</button>
+  <button data-page="report"><span class="ico">▥</span> Forecast & Reporting</button>
+ </nav>
+ <div class="nav-label">SYSTEM</div>
+ <nav class="nav"><button data-page="settings"><span class="ico">⚙</span> Settings & Connection</button></nav>
+ <div class="side-bottom"><div class="status">● CLOUD-READY</div><div style="margin-top:6px">Connect Supabase and sign in to create, edit and delete cloud records.</div></div>
+</aside>
+<main>
+ <header class="topbar"><div style="display:flex;align-items:center;gap:12px"><button class="mobile-menu" id="mobileMenu">☰</button><div class="crumb" id="crumb">Dump Management Overview<small>Mining Operations / Dump Control</small></div></div><div class="top-actions"><span class="pill" id="connection">● Offline Demo</span><button class="pill" id="langBtn">EN / ID</button></div></header>
+ <div class="content">
+  <section id="page-overview" class="page">
+   <div class="page-head"><div><h1>Dump Management Overview</h1><p>Monitor dump capacity, material movement and operational performance.</p></div><div class="filters"><select id="period"><option value="All">All Period</option><option>Daily</option><option>Weekly</option><option>Monthly</option><option>Yearly</option></select><select id="pitFilter"><option value="All">All Pit</option><option>Pit A</option><option>Pit B</option></select><select id="dumpFilter"><option value="All">All Dump</option><option>Dump A</option><option>Dump B</option><option>Dump C</option></select></div></div>
+   <div class="grid kpis">
+    <div class="card"><div class="kpi-top">TOTAL DUMP CAPACITY <span class="kpi-icon">▰</span></div><div class="kpi-value" id="kCapacity">4.50M</div><div class="kpi-foot">WMT · Design capacity</div></div>
+    <div class="card"><div class="kpi-top">ACTUAL DUMPED <span class="kpi-icon">↗</span></div><div class="kpi-value" id="kActual">2.50M</div><div class="kpi-foot">WMT · Movement accumulation</div></div>
+    <div class="card"><div class="kpi-top">REMAINING CAPACITY <span class="kpi-icon">◷</span></div><div class="kpi-value" id="kRemaining">2.00M</div><div class="kpi-foot">WMT · Available capacity</div></div>
+    <div class="card"><div class="kpi-top">CAPACITY UTILIZATION <span class="kpi-icon">◉</span></div><div class="kpi-value" id="kUtil">55.6%</div><div class="kpi-foot">Actual dumped / total capacity</div></div>
+    <div class="card"><div class="kpi-top">ESTIMATED REMAINING DAYS <span class="kpi-icon">◷</span></div><div class="kpi-value" id="kRemainDays">111 days</div><div class="kpi-foot">Remaining capacity / average daily dumping</div></div>
+   </div>
+   <div class="grid two">
+    <div class="card"><div class="card-title">Material Movement <small>Plan vs Actual · WMT</small></div><div class="chart-wrap"><canvas id="movementChart"></canvas></div></div>
+    <div class="card"><div class="card-title">Capacity Utilization <small>By dump location</small></div><div id="capacityBars"></div></div>
+   </div>
+   <div class="grid two">
+    <div class="card"><div class="card-title">Material Distribution <small>Actual WMT</small></div><div class="chart-wrap short"><canvas id="materialChart"></canvas></div></div>
+    <div class="card"><div class="card-title">Dump Status <small>Capacity threshold</small></div><div id="statusList"></div></div>
+   </div>
+   <div class="card"><div class="card-title">Dump Location Summary <small>Live overview · demo data</small></div><div class="table-wrap"><table id="overviewTable"></table></div></div>
+  </section>
+
+  <section id="page-location" class="page hidden">
+   <div class="page-head"><div><h1>Dump Location Monitoring</h1><p>2D geographic view of dump locations and capacity status.</p></div><div class="filters"><select><option>All Dump Type</option><option>Waste Dump</option><option>Ore Stockpile</option></select><button class="btn secondary" onclick="showPage('database')">+ Add Location</button></div></div>
+   <div class="card"><div class="card-title">2D Dump Map <small>Illustrative coordinates · replace with site survey coordinates</small></div><div id="map"></div><div class="footer-note">Map markers are illustrative demo positions. For production use, load surveyed dump boundary polygons and the mine's correct CRS (e.g. WGS84 / UTM zone 52N) through GeoJSON.</div></div>
+   <div class="card" style="margin-top:14px"><div class="card-title">Location Register</div><div class="table-wrap"><table id="locationTable"></table></div></div>
+  </section>
+
+  <section id="page-movement" class="page hidden">
+   <div class="page-head"><div><h1>Material Movement</h1><p>Daily dumping performance by material, pit and contractor.</p></div><div class="filters"><select><option>November 2026</option><option>October 2026</option></select><select><option>All Contractor</option><option>Contractor A</option><option>Contractor B</option></select></div></div>
+   <div class="grid kpis"><div class="card"><div class="kpi-top">PLAN TODAY</div><div class="kpi-value">18,000</div><div class="kpi-foot">WMT</div></div><div class="card"><div class="kpi-top">ACTUAL TODAY</div><div class="kpi-value">17,250</div><div class="kpi-foot">WMT</div></div><div class="card"><div class="kpi-top">ACHIEVEMENT</div><div class="kpi-value positive">95.8%</div><div class="kpi-foot">Actual / Plan</div></div><div class="card"><div class="kpi-top">VOLUME MOVED</div><div class="kpi-value">10,781</div><div class="kpi-foot">BCM · illustrative</div></div></div>
+   <div class="grid two"><div class="card"><div class="card-title">Daily Plan vs Actual <small>WMT</small></div><div class="chart-wrap"><canvas id="dailyChart"></canvas></div></div><div class="card"><div class="card-title">Material Split <small>WMT</small></div><div class="chart-wrap"><canvas id="splitChart"></canvas></div></div></div>
+   <div class="card"><div class="card-title">Daily Material Movement Register</div><div class="table-wrap"><table id="movementTable"></table></div></div>
+  </section>
+
+  <section id="page-capacity" class="page hidden">
+   <div class="page-head"><div><h1>Capacity Monitoring</h1><p>Compare design capacity, movement accumulation and survey-based remaining capacity.</p></div></div>
+   <div class="grid two"><div class="card"><div class="card-title">Capacity by Dump <small>WMT</small></div><div class="chart-wrap"><canvas id="capacityChart"></canvas></div></div><div class="card"><div class="card-title">Capacity Control Logic</div><p style="color:var(--muted);font-size:11px;line-height:1.7">Movement-based estimate = design capacity − cumulative accepted dumping tonnage. Survey-based remaining capacity = surveyed available volume × applicable density, subject to the approved design limit.</p><div class="tag warn">Reconciliation required</div><p class="footer-note">Do not add survey volume to daily movement. Reconcile the two independently to avoid double counting.</p></div></div>
+   <div class="card"><div class="card-title">Capacity Register</div><div class="table-wrap"><table id="capacityTable"></table></div></div>
+  </section>
+
+  <section id="page-threeD" class="page hidden">
+   <div class="page-head"><div><h1>3D Dump Monitoring</h1><p>Conceptual 3D terrain preview. Import surveyed DTM/mesh for engineering-grade comparison.</p></div><div class="filters"><select id="sceneDump"><option>Dump A</option><option>Dump B</option><option>Dump C</option></select><button class="btn secondary" id="resetScene">Reset View</button></div></div>
+   <div class="card"><div class="card-title">3D Dump Surface <small>Interactive conceptual model · drag to rotate, scroll to zoom</small></div><div id="scene"><div class="scene-note">DEMO TERRAIN · NOT A SURVEY MODEL</div></div></div>
+   <div class="grid three" style="margin-top:14px"><div class="card"><div class="kpi-top">DESIGN ELEVATION</div><div class="kpi-value">+245.0</div><div class="kpi-foot">mRL · sample only</div></div><div class="card"><div class="kpi-top">ACTUAL ELEVATION</div><div class="kpi-value">+231.5</div><div class="kpi-foot">mRL · sample only</div></div><div class="card"><div class="kpi-top">ELEVATION DIFFERENCE</div><div class="kpi-value warning">13.5</div><div class="kpi-foot">m · design minus actual</div></div></div>
+   <p class="footer-note">For operational acceptance, connect a georeferenced DTM/mesh generated from survey data. A conceptual Three.js surface is provided as a UI preview only.</p>
+  </section>
+
+  <section id="page-database" class="page hidden">
+   <div class="page-head"><div><h1>Database Management</h1><p>Live CRUD management. Records are saved directly to Supabase when signed in.</p></div><div class="filters"><button class="btn secondary" id="refreshCloud">↻ Refresh Cloud Data</button></div></div>
+   <div class="card"><div class="card-title">Dump Master <small>Add or edit dump location and design capacity</small></div>
+    <input type="hidden" id="fEditId">
+    <div class="form-grid">
+     <div class="field"><label>Dump ID</label><input id="fId" placeholder="DMP-004"></div><div class="field"><label>Dump Name</label><input id="fName" placeholder="Dump D"></div><div class="field"><label>Pit</label><input id="fPit" placeholder="Pit A"></div>
+     <div class="field"><label>Dump Type</label><select id="fType"><option>Waste Dump</option><option>Ore Stockpile</option></select></div><div class="field"><label>Design Capacity (WMT)</label><input id="fCapacity" type="number" min="0" placeholder="1000000"></div><div class="field"><label>Capacity (BCM)</label><input id="fBcm" type="number" min="0" placeholder="700000"></div>
+     <div class="field"><label>Design Elevation (mRL)</label><input id="fElev" type="number" step="any" placeholder="245"></div><div class="field"><label>Latitude</label><input id="fLat" type="number" step="any" placeholder="-0.6"></div><div class="field"><label>Longitude</label><input id="fLon" type="number" step="any" placeholder="127.4"></div>
+     <div class="field"><label>Status</label><select id="fStatus"><option>Active</option><option>Inactive</option><option>Closed</option></select></div><div class="field" style="grid-column:span 2"><label>Notes</label><input id="fNotes" placeholder="Optional notes"></div>
+    </div><div class="actions"><button class="btn" id="saveDump">Save Dump</button><button class="btn secondary" id="clearDump">Clear Form</button><span class="footer-note" id="dumpFormMode">Mode: Add new dump</span></div>
+   </div>
+   <div class="card" style="margin-top:14px"><div class="card-title">Dump Master Records <small>Edit / Delete</small></div><div class="table-wrap"><table id="dumpCrudTable"></table></div></div>
+   <div class="card" style="margin-top:14px"><div class="card-title">Daily Material Movement <small>Add or edit movement transactions</small></div>
+    <input type="hidden" id="mEditId">
+    <div class="form-grid">
+     <div class="field"><label>Date</label><input id="mDate" type="date" value="2026-11-10"></div><div class="field"><label>Dump</label><select id="mDump"></select></div><div class="field"><label>Material</label><select id="mMaterial"><option>WST</option><option>LIM</option><option>SAP</option><option>OTHER</option></select></div>
+     <div class="field"><label>Pit</label><input id="mPit" placeholder="Pit A"></div><div class="field"><label>Contractor</label><input id="mContractor" placeholder="Contractor A"></div><div class="field"><label>Plan (WMT)</label><input id="mPlan" type="number" min="0" placeholder="6000"></div>
+     <div class="field"><label>Actual (WMT)</label><input id="mActual" type="number" min="0" placeholder="5800"></div><div class="field"><label>Plan (BCM)</label><input id="mPlanBcm" type="number" min="0" placeholder="3750"></div><div class="field"><label>Actual (BCM)</label><input id="mActualBcm" type="number" min="0" placeholder="3625"></div>
+     <div class="field"><label>Density (WMT/BCM)</label><input id="mDensity" type="number" step="any" min="0" placeholder="1.50"></div><div class="field" style="grid-column:span 2"><label>Remarks</label><input id="mRemarks" placeholder="Optional remarks"></div>
+    </div><div class="actions"><button class="btn" id="saveMovement">Save Movement</button><button class="btn secondary" id="clearMovement">Clear Form</button><span class="footer-note" id="movementFormMode">Mode: Add new movement</span></div>
+   </div>
+   <div class="card" style="margin-top:14px"><div class="card-title">Daily Movement Records <small>Edit / Delete</small></div><div class="table-wrap"><table id="movementCrudTable"></table></div></div>
+   <div class="card" style="margin-top:14px"><div class="card-title">Dump Equipment Activity <small>Add or edit equipment activity</small></div>
+    <input type="hidden" id="eEditId">
+    <div class="form-grid">
+     <div class="field"><label>Activity Date</label><input id="eDate" type="date" value="2026-11-10"></div><div class="field"><label>Dump</label><select id="eDump"></select></div><div class="field"><label>Contractor</label><input id="eContractor" placeholder="Contractor A"></div>
+     <div class="field"><label>Equipment ID</label><input id="eEquipmentId" placeholder="ADT-001"></div><div class="field"><label>Equipment Type</label><input id="eEquipmentType" placeholder="ADT 40T"></div><div class="field"><label>Operating Hours</label><input id="eHours" type="number" min="0" step="any" placeholder="10"></div>
+     <div class="field"><label>Trips</label><input id="eTrips" type="number" min="0" step="1" placeholder="20"></div><div class="field"><label>Payload (WMT/trip)</label><input id="ePayload" type="number" min="0" step="any" placeholder="35"></div><div class="field" style="grid-column:span 1"><label>Remarks</label><input id="eRemarks" placeholder="Optional remarks"></div>
+    </div><div class="actions"><button class="btn" id="saveEquipment">Save Equipment Activity</button><button class="btn secondary" id="clearEquipment">Clear Form</button><span class="footer-note" id="equipmentFormMode">Mode: Add new activity</span></div>
+   </div>
+   <div class="card" style="margin-top:14px"><div class="card-title">Equipment Records <small>Edit / Delete</small></div><div class="table-wrap"><table id="equipmentCrudTable"></table></div></div>
+   <div class="card" style="margin-top:14px"><div class="card-title">Database Status</div><div id="dbStatus" class="footer-note">Connect Supabase and sign in to load and edit online records.</div></div>
+  </section>
+
+  <section id="page-report" class="page hidden">
+   <div class="page-head"><div><h1>Forecast & Reporting</h1><p>Capacity exhaustion forecast and exportable operational summaries.</p></div><div class="filters"><button class="btn secondary" id="exportCsv">Export CSV</button></div></div>
+   <div class="grid two"><div class="card"><div class="card-title">Remaining Capacity Forecast <small>WMT</small></div><div class="chart-wrap"><canvas id="forecastChart"></canvas></div></div><div class="card"><div class="card-title">Forecast Assumptions</div><div class="field"><label>Average daily dumping (WMT/day)</label><input id="dailyRate" type="number" value="18000"></div><div class="progress-row"><div class="progress-label"><span>Estimated remaining days</span><strong id="remainingDays">111 days</strong></div><div class="bar"><span id="forecastBar" style="width:70%"></span></div></div><p class="footer-note">Forecast = remaining capacity ÷ average daily dumping. This is a planning estimate, not an approved dump closure date.</p></div></div>
+   <div class="card"><div class="card-title">Dump Capacity Report</div><div class="table-wrap"><table id="reportTable"></table></div></div>
+  </section>
+
+  <section id="page-settings" class="page hidden">
+   <div class="page-head"><div><h1>Settings & Supabase Connection</h1><p>Connect this dashboard to your existing Supabase project.</p></div></div>
+   <div class="card"><div class="card-title">Supabase Configuration <small>Credentials stay in this browser</small></div>
+    <div class="form-grid"><div class="field" style="grid-column:span 2"><label>Supabase Project URL</label><input id="sbUrl" value="https://mjerfpzagymscioovzji.supabase.co"></div><div class="field"><label>Publishable / Anon Key</label><input id="sbKey" type="password" placeholder="Paste your Supabase publishable key"></div></div>
+    <div class="actions"><button class="btn" id="connectSb">Connect Supabase</button><button class="btn secondary" id="disconnectSb">Disconnect</button></div>
+    <p class="footer-note">Use only the Supabase publishable/anon key in this browser application. Never paste a service_role or secret key here. Configure database RLS before enabling multi-user access.</p>
+   </div>
+   <div class="card" style="margin-top:14px"><div class="card-title">Authentication</div><div class="form-grid"><div class="field"><label>Email</label><input id="authEmail" type="email" placeholder="user@company.com"></div><div class="field"><label>Password</label><input id="authPassword" type="password" placeholder="Password"></div></div><div class="actions"><button class="btn" id="signIn">Sign In</button><button class="btn secondary" id="signUp">Register</button><button class="btn danger" id="signOut">Sign Out</button></div><div id="authStatus" class="footer-note">Not signed in.</div></div>
+   <div class="card" style="margin-top:14px"><div class="card-title">Deployment</div><p style="font-size:11px;color:var(--muted);line-height:1.7">This dashboard is published from the mine-dump-management repository. Upload updated index.html to the main branch to deploy changes. Run the SQL schema file in Supabase SQL Editor before connecting this app.</p></div>
+  </section>
+ </div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+const demoDumps=[
+ {dump_id:'DMP-001',name:'Dump A',pit:'Pit A',type:'Waste Dump',capacity_wmt:2000000,actual_wmt:1250000,capacity_bcm:1333333,actual_bcm:833333,lat:-0.62,lon:127.42,elev:245},
+ {dump_id:'DMP-002',name:'Dump B',pit:'Pit A',type:'Waste Dump',capacity_wmt:1500000,actual_wmt:900000,capacity_bcm:1000000,actual_bcm:600000,lat:-0.625,lon:127.435,elev:230},
+ {dump_id:'DMP-003',name:'Dump C',pit:'Pit B',type:'Waste Dump',capacity_wmt:1000000,actual_wmt:350000,capacity_bcm:666667,actual_bcm:233333,lat:-0.635,lon:127.415,elev:220}
+];
+let dumps=demoDumps.map(x=>({...x}));
+let movements=[
+ {date:'2026-11-10',dump:'Dump A',material:'WST',contractor:'Contractor A',plan_wmt:7000,actual_wmt:6800,plan_bcm:4667,actual_bcm:4533},
+ {date:'2026-11-10',dump:'Dump B',material:'LIM',contractor:'Contractor B',plan_wmt:6000,actual_wmt:5700,plan_bcm:4000,actual_bcm:3800},
+ {date:'2026-11-10',dump:'Dump C',material:'SAP',contractor:'Contractor A',plan_wmt:5000,actual_wmt:4750,plan_bcm:3333,actual_bcm:3167}
+];
+let sb=null, mapObj=null, mapMarkers=null, sceneState=null, charts={};
+const fmt=n=>Number(n||0).toLocaleString('en-US');
+const compact=n=>n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':fmt(n);
+const total=(key,arr=dumps)=>arr.reduce((s,x)=>s+Number(x[key]||0),0);
+function chart(id,type,data,options={}){if(charts[id])charts[id].destroy();const ctx=document.getElementById(id);if(!ctx)return;charts[id]=new Chart(ctx,{type,data,options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#aebed0',boxWidth:10,font:{size:10}}}},scales:type==='doughnut'?{}:{x:{ticks:{color:'#91a3bb',font:{size:9}},grid:{color:'#24344a'}},y:{ticks:{color:'#91a3bb',font:{size:9}},grid:{color:'#24344a'}}},...options}})}
+function table(el,headers,rows){const t=document.getElementById(el);if(!t)return;t.innerHTML='<thead><tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('')+'</tbody>'}
+function render(){
+ const cap=total('capacity_wmt'),act=total('actual_wmt'),rem=cap-act;
+ document.getElementById('kCapacity').textContent=compact(cap);document.getElementById('kActual').textContent=compact(act);document.getElementById('kRemaining').textContent=compact(rem);document.getElementById('kUtil').textContent=(cap?act/cap*100:0).toFixed(1)+'%';
+ document.getElementById('capacityBars').innerHTML=dumps.map(d=>{let p=d.capacity_wmt?d.actual_wmt/d.capacity_wmt*100:0;return `<div class="progress-row"><div class="progress-label"><span>${d.name}</span><strong>${p.toFixed(1)}%</strong></div><div class="bar"><span style="width:${Math.min(p,100)}%;background:${p>=85?'var(--red)':p>=70?'var(--amber)':'var(--green)'}"></span></div><div class="kpi-foot">${fmt(d.actual_wmt)} / ${fmt(d.capacity_wmt)} WMT</div></div>`}).join('');
+ document.getElementById('statusList').innerHTML=dumps.map(d=>{let p=d.actual_wmt/d.capacity_wmt*100;let c=p>=85?'bad':p>=70?'warn':'';let label=p>=85?'CRITICAL':p>=70?'WARNING':'NORMAL';return `<div class="progress-row" style="display:flex;justify-content:space-between;align-items:center"><div><b>${d.name}</b><div class="kpi-foot">${p.toFixed(1)}% utilized</div></div><span class="tag ${c}">${label}</span></div>`}).join('');
+ const rows=dumps.map(d=>{let p=d.actual_wmt/d.capacity_wmt*100;return [d.dump_id,d.name,d.pit,d.type,fmt(d.capacity_wmt),fmt(d.actual_wmt),fmt(d.capacity_wmt-d.actual_wmt),p.toFixed(1)+'%',`<span class="tag ${p>=85?'bad':p>=70?'warn':''}">${p>=85?'Critical':p>=70?'Warning':'Normal'}</span>`]});
+ const h=['Dump ID','Location','Pit','Type','Capacity WMT','Actual WMT','Remaining WMT','Utilization','Status'];
+ table('overviewTable',h,rows);table('locationTable',h,rows);table('capacityTable',h,rows);table('reportTable',h,rows);
+ const mPlan=movements.reduce((s,x)=>s+x.plan_wmt,0),mAct=movements.reduce((s,x)=>s+x.actual_wmt,0);
+ const mats=['WST','LIM','SAP','OTHER'];const matPlan=mats.map(k=>movements.filter(x=>x.material===k).reduce((a,x)=>a+Number(x.plan_wmt||0),0));const matActual=mats.map(k=>movements.filter(x=>x.material===k).reduce((a,x)=>a+Number(x.actual_wmt||0),0));chart('movementChart','bar',{labels:mats,datasets:[{label:'Plan',data:matPlan,backgroundColor:'#45617e'},{label:'Actual',data:matActual,backgroundColor:'#36c982'}]});
+ chart('materialChart','doughnut',{labels:['WST','LIM','SAP'],datasets:[{data:[6800,5700,4750],backgroundColor:['#36c982','#e9b94f','#58a6ef'],borderWidth:0}]});
+ chart('dailyChart','bar',{labels:['Nov 06','Nov 07','Nov 08','Nov 09','Nov 10'],datasets:[{label:'Plan',data:[16500,17500,18000,18000,18000],backgroundColor:'#45617e'},{label:'Actual',data:[16000,17100,17600,16900,17250],backgroundColor:'#36c982'}]});
+ chart('splitChart','doughnut',{labels:['WST','LIM','SAP'],datasets:[{data:[6800,5700,4750],backgroundColor:['#36c982','#e9b94f','#58a6ef'],borderWidth:0}]});
+ chart('capacityChart','bar',{labels:dumps.map(x=>x.name),datasets:[{label:'Capacity',data:dumps.map(x=>x.capacity_wmt),backgroundColor:'#45617e'},{label:'Actual',data:dumps.map(x=>x.actual_wmt),backgroundColor:'#36c982'}]});
+ const rate=Number(document.getElementById('dailyRate')?.value||18000),days=rate>0?rem/rate:0;
+ const dayLabel=rate>0?Math.ceil(days).toLocaleString('en-US')+' days':'—';
+ const overviewRemain=document.getElementById('kRemainDays');if(overviewRemain)overviewRemain.textContent=dayLabel;
+ const forecastRemain=document.getElementById('remainingDays');if(forecastRemain)forecastRemain.textContent=dayLabel;
+ const forecastBar=document.getElementById('forecastBar');if(forecastBar)forecastBar.style.width=rate>0?Math.min(100,days/180*100)+'%':'0%';
+ chart('forecastChart','line',{labels:['Today','30d','60d','90d','120d'],datasets:[{label:'Remaining Capacity (WMT)',data:[rem,Math.max(0,rem-rate*30),Math.max(0,rem-rate*60),Math.max(0,rem-rate*90),Math.max(0,rem-rate*120)],borderColor:'#36c982',backgroundColor:'#36c98222',fill:true,tension:.3}]});
+ table('movementTable',['Date','Dump','Material','Contractor','Plan WMT','Actual WMT','Plan BCM','Actual BCM','Achievement'],movements.map(m=>[m.date,m.dump,m.material,m.contractor,fmt(m.plan_wmt),fmt(m.actual_wmt),fmt(m.plan_bcm),fmt(m.actual_bcm),(m.actual_wmt/m.plan_wmt*100).toFixed(1)+'%']));
+}
+function showPage(name){document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));document.getElementById('page-'+name).classList.remove('hidden');document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===name));let label={overview:'Dump Management Overview',location:'Dump Location Monitoring',movement:'Material Movement',capacity:'Capacity Monitoring',threeD:'3D Dump Monitoring',database:'Database Management',report:'Forecast & Reporting',settings:'Settings & Connection'}[name];document.getElementById('crumb').innerHTML=label+'<small>Mining Operations / Dump Control</small>';if(name==='location')setTimeout(initMap,100);if(name==='threeD')setTimeout(init3D,100);if(name==='movement')render();if(name==='capacity'||name==='report')render();if(name==='database'){fillDumpSelects();renderCrudTables();}document.getElementById('sidebar').classList.remove('open')}
+document.querySelectorAll('.nav button[data-page]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
+document.getElementById('mobileMenu').onclick=()=>document.getElementById('sidebar').classList.toggle('open');
+// ---------- Supabase-backed CRUD ----------
+const $ = id => document.getElementById(id);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function requireCloud(){if(!sb)return alert('Connect Supabase first.');if(!sb.auth.getSession)return alert('Supabase client is not ready.');return true}
+function setDbStatus(msg,isError=false){$('dbStatus').textContent=msg;$('dbStatus').style.color=isError?'var(--red)':'var(--green)'}
+function fillDumpSelects(){const opts=dumps.map(d=>`<option value="${esc(d.dump_id)}">${esc(d.name)} (${esc(d.dump_id)})</option>`).join('');$('mDump').innerHTML=opts;$('eDump').innerHTML=opts}
+function clearDumpForm(){['fEditId','fId','fName','fPit','fCapacity','fBcm','fElev','fLat','fLon','fNotes'].forEach(id=>$(id).value='');$('fType').value='Waste Dump';$('fStatus').value='Active';$('fId').disabled=false;$('dumpFormMode').textContent='Mode: Add new dump';$('saveDump').textContent='Save Dump'}
+function clearMovementForm(){['mEditId','mPit','mContractor','mPlan','mActual','mPlanBcm','mActualBcm','mDensity','mRemarks'].forEach(id=>$(id).value='');$('mDate').value=new Date().toISOString().slice(0,10);$('movementFormMode').textContent='Mode: Add new movement';$('saveMovement').textContent='Save Movement'}
+function clearEquipmentForm(){['eEditId','eContractor','eEquipmentId','eEquipmentType','eHours','eTrips','ePayload','eRemarks'].forEach(id=>$(id).value='');$('eDate').value=new Date().toISOString().slice(0,10);$('equipmentFormMode').textContent='Mode: Add new activity';$('saveEquipment').textContent='Save Equipment Activity'}
+function renderCrudTables(){
+ $('dumpCrudTable').innerHTML='<thead><tr><th>Dump ID</th><th>Name</th><th>Pit</th><th>Type</th><th>Capacity WMT</th><th>Capacity BCM</th><th>Design Elev. (mRL)</th><th>Latitude</th><th>Longitude</th><th>Status</th><th>Notes</th><th>Actions</th></tr></thead><tbody>'+dumps.map(d=>`<tr><td>${esc(d.dump_id)}</td><td>${esc(d.name)}</td><td>${esc(d.pit)}</td><td>${esc(d.type)}</td><td>${fmt(d.capacity_wmt)}</td><td>${fmt(d.capacity_bcm)}</td><td>${d.elev==null?'—':esc(d.elev)}</td><td>${d.lat==null?'—':esc(d.lat)}</td><td>${d.lon==null?'—':esc(d.lon)}</td><td>${esc(d.status||'Active')}</td><td>${esc(d.notes||'')}</td><td><button class="btn secondary" data-edit-dump="${esc(d.dump_id)}">Edit</button> <button class="btn danger" data-delete-dump="${esc(d.dump_id)}">Delete</button></td></tr>`).join('')+'</tbody>';
+ $('movementCrudTable').innerHTML='<thead><tr><th>Date</th><th>Dump</th><th>Pit</th><th>Material</th><th>Contractor</th><th>Plan WMT</th><th>Actual WMT</th><th>Plan BCM</th><th>Actual BCM</th><th>Density</th><th>Remarks</th><th>Actions</th></tr></thead><tbody>'+movements.map(m=>`<tr><td>${esc(m.date)}</td><td>${esc(m.dump_name||m.dump)}</td><td>${esc(m.pit||'')}</td><td>${esc(m.material)}</td><td>${esc(m.contractor)}</td><td>${fmt(m.plan_wmt)}</td><td>${fmt(m.actual_wmt)}</td><td>${fmt(m.plan_bcm)}</td><td>${fmt(m.actual_bcm)}</td><td>${m.density_wmt_per_bcm==null?'—':fmt(m.density_wmt_per_bcm)}</td><td>${esc(m.remarks||'')}</td><td><button class="btn secondary" data-edit-movement="${esc(m.id)}">Edit</button> <button class="btn danger" data-delete-movement="${esc(m.id)}">Delete</button></td></tr>`).join('')+'</tbody>';
+ $('equipmentCrudTable').innerHTML='<thead><tr><th>Date</th><th>Dump</th><th>Contractor</th><th>Equipment ID</th><th>Type</th><th>Hours</th><th>Trips</th><th>Payload WMT</th><th>Moved WMT</th><th>Remarks</th><th>Actions</th></tr></thead><tbody>'+equipmentRows.map(e=>`<tr><td>${esc(e.activity_date)}</td><td>${esc(e.dump_name||e.dump_id)}</td><td>${esc(e.contractor)}</td><td>${esc(e.equipment_id)}</td><td>${esc(e.equipment_type)}</td><td>${fmt(e.operating_hours)}</td><td>${fmt(e.trips)}</td><td>${fmt(e.payload_wmt)}</td><td>${fmt(e.moved_wmt)}</td><td>${esc(e.remarks||'')}</td><td><button class="btn secondary" data-edit-equipment="${esc(e.id)}">Edit</button> <button class="btn danger" data-delete-equipment="${esc(e.id)}">Delete</button></td></tr>`).join('')+'</tbody>';
+}
+let equipmentRows=[];
+async function loadCloud(){
+ if(!sb)return;
+ const {data:sessionData,error:sessionError}=await sb.auth.getSession();
+ if(sessionError)throw sessionError;
+ if(!sessionData.session){setDbStatus('Supabase connected, but please sign in before loading protected data.');return}
+ const [masterRes,movementRes,equipmentRes]=await Promise.all([
+  sb.from('dump_master').select('*').order('dump_id'),
+  sb.from('dump_daily').select('*').order('movement_date',{ascending:false}),
+  sb.from('dump_equipment').select('*').order('activity_date',{ascending:false})
+ ]);
+ if(masterRes.error)throw masterRes.error;if(movementRes.error)throw movementRes.error;if(equipmentRes.error)throw equipmentRes.error;
+ const master=masterRes.data||[], daily=movementRes.data||[];equipmentRows=equipmentRes.data||[];
+ dumps=master.map(d=>({dump_id:d.dump_id,name:d.dump_name,pit:d.pit||'',type:d.dump_type||'Waste Dump',capacity_wmt:Number(d.capacity_wmt||0),capacity_bcm:Number(d.capacity_bcm||0),actual_wmt:daily.filter(x=>x.dump_id===d.dump_id).reduce((a,x)=>a+Number(x.actual_wmt||0),0),actual_bcm:daily.filter(x=>x.dump_id===d.dump_id).reduce((a,x)=>a+Number(x.actual_bcm||0),0),lat:d.latitude==null?null:Number(d.latitude),lon:d.longitude==null?null:Number(d.longitude),elev:Number(d.design_elevation_mrl||0),status:d.status||'Active',notes:d.notes||''}));
+ movements=daily.map(m=>({id:m.id,date:m.movement_date,dump_id:m.dump_id,dump_name:master.find(d=>d.dump_id===m.dump_id)?.dump_name||m.dump_id,dump:master.find(d=>d.dump_id===m.dump_id)?.dump_name||m.dump_id,material:m.material,contractor:m.contractor||'',pit:m.pit||'',plan_wmt:Number(m.plan_wmt||0),actual_wmt:Number(m.actual_wmt||0),plan_bcm:Number(m.plan_bcm||0),actual_bcm:Number(m.actual_bcm||0),density_wmt_per_bcm:m.density_wmt_per_bcm,remarks:m.remarks||''}));
+ equipmentRows=equipmentRows.map(e=>({...e,dump_name:master.find(d=>d.dump_id===e.dump_id)?.dump_name||e.dump_id,moved_wmt:Number(e.moved_wmt||0)}));
+ fillDumpSelects();render();renderCrudTables();if(mapObj)refreshMapMarkers();setDbStatus(`Cloud data loaded: ${dumps.length} dumps, ${movements.length} movements, ${equipmentRows.length} equipment records.`);
+}
+$('saveDump').onclick=async()=>{if(!requireCloud())return;const id=$('fId').value.trim(),name=$('fName').value.trim(),capacity=Number($('fCapacity').value||0);if(!id||!name)return alert('Dump ID and Dump Name are required.');const payload={dump_id:id,dump_name:name,pit:$('fPit').value.trim()||null,dump_type:$('fType').value,capacity_wmt:capacity,capacity_bcm:Number($('fBcm').value||0),design_elevation_mrl:$('fElev').value===''?null:Number($('fElev').value),latitude:$('fLat').value===''?null:Number($('fLat').value),longitude:$('fLon').value===''?null:Number($('fLon').value),status:$('fStatus').value,notes:$('fNotes').value.trim()||null};try{const editId=$('fEditId').value;let result;if(editId){result=await sb.from('dump_master').update({...payload,updated_by:(await sb.auth.getUser()).data.user?.id}).eq('dump_id',editId).select('dump_id').maybeSingle();}else{result=await sb.from('dump_master').insert({...payload,created_by:(await sb.auth.getUser()).data.user?.id}).select('dump_id').single();}if(result.error)throw result.error;if(!result.data)throw new Error('No record was updated. Please sign in again and verify UPDATE policy.');clearDumpForm();await loadCloud();alert(editId?'Dump master updated successfully.':'Dump master added successfully.');}catch(e){alert('Save dump failed: '+e.message)}};
+$('saveMovement').onclick=async()=>{if(!requireCloud())return;const dumpId=$('mDump').value;if(!dumpId)return alert('Create a dump master record first.');const selected=dumps.find(d=>d.dump_id===dumpId);const payload={movement_date:$('mDate').value,dump_id:dumpId,pit:$('mPit').value.trim()||selected?.pit||null,contractor:$('mContractor').value.trim()||null,material:$('mMaterial').value,plan_wmt:Number($('mPlan').value||0),actual_wmt:Number($('mActual').value||0),plan_bcm:Number($('mPlanBcm').value||0),actual_bcm:Number($('mActualBcm').value||0),density_wmt_per_bcm:$('mDensity').value===''?null:Number($('mDensity').value),remarks:$('mRemarks').value.trim()||null};try{const editId=$('mEditId').value;let result;if(editId){result=await sb.from('dump_daily').update(payload).eq('id',editId).select('id').maybeSingle();}else{result=await sb.from('dump_daily').insert(payload).select('id').single();}if(result.error)throw result.error;if(!result.data)throw new Error('No movement row was updated. Please sign in again and verify UPDATE policy.');clearMovementForm();await loadCloud();alert(editId?'Movement updated successfully.':'Movement saved successfully.');}catch(e){alert('Save movement failed: '+e.message)}};
+$('saveEquipment').onclick=async()=>{if(!requireCloud())return;const dumpId=$('eDump').value;if(!dumpId)return alert('Create a dump master record first.');const payload={activity_date:$('eDate').value,dump_id:dumpId,contractor:$('eContractor').value.trim()||null,equipment_id:$('eEquipmentId').value.trim(),equipment_type:$('eEquipmentType').value.trim()||null,operating_hours:Number($('eHours').value||0),trips:Number($('eTrips').value||0),payload_wmt:Number($('ePayload').value||0),remarks:$('eRemarks').value.trim()||null};if(!payload.equipment_id)return alert('Equipment ID is required.');try{const editId=$('eEditId').value;let result;if(editId){result=await sb.from('dump_equipment').update(payload).eq('id',editId).select('id').maybeSingle()}else{result=await sb.from('dump_equipment').insert(payload).select('id').single()}if(result.error)throw result.error;if(!result.data)throw new Error('No equipment row was updated. Please sign in again and verify UPDATE policy.');clearEquipmentForm();$('saveEquipment').textContent='Save Equipment Activity';await loadCloud();alert(editId?'Equipment activity updated successfully.':'Equipment activity saved successfully.')}catch(e){alert('Save equipment failed: '+e.message)}};
+$('clearDump').onclick=clearDumpForm;$('clearMovement').onclick=clearMovementForm;$('clearEquipment').onclick=clearEquipmentForm;$('refreshCloud').onclick=async()=>{try{await loadCloud()}catch(e){setDbStatus(e.message,true);alert('Refresh failed: '+e.message)}};
+$('dumpCrudTable').addEventListener('click',async e=>{
+ const edit=e.target.closest('[data-edit-dump]'),del=e.target.closest('[data-delete-dump]');
+ if(edit){const d=dumps.find(x=>x.dump_id===edit.dataset.editDump);if(!d)return;
+  $('fEditId').value=d.dump_id;$('fId').value=d.dump_id;$('fId').disabled=true;$('fName').value=d.name||'';$('fPit').value=d.pit||'';$('fType').value=d.type||'Waste Dump';$('fCapacity').value=d.capacity_wmt??0;$('fBcm').value=d.capacity_bcm??0;$('fElev').value=d.elev??'';$('fLat').value=d.lat??'';$('fLon').value=d.lon??'';$('fStatus').value=d.status||'Active';$('fNotes').value=d.notes||'';$('dumpFormMode').textContent='Mode: Editing '+d.dump_id;$('saveDump').textContent='Update Dump';$('fName').focus();document.querySelector('#page-database .card').scrollIntoView({behavior:'smooth',block:'start'});return;
+ }
+ if(del){if(!requireCloud())return;const id=del.dataset.deleteDump;if(!confirm('Delete dump '+id+'? This is only possible when no movement/equipment records reference it.'))return;
+  try{const {data,error}=await sb.from('dump_master').delete().eq('dump_id',id).select('dump_id');if(error)throw error;if(!data||!data.length)throw new Error('No row was deleted. Check login session and DELETE policy.');await loadCloud();alert('Dump '+id+' deleted successfully.');}catch(err){alert('Delete dump failed: '+err.message)}
+ }
+});
+$('movementCrudTable').addEventListener('click',async e=>{
+ const edit=e.target.closest('[data-edit-movement]'),del=e.target.closest('[data-delete-movement]');
+ if(edit){const m=movements.find(x=>String(x.id)===String(edit.dataset.editMovement));if(!m)return;
+  fillDumpSelects();$('mEditId').value=m.id;$('mDate').value=m.date||'';$('mDump').value=m.dump_id;$('mMaterial').value=m.material||'WST';$('mPit').value=m.pit||'';$('mContractor').value=m.contractor||'';$('mPlan').value=m.plan_wmt??0;$('mActual').value=m.actual_wmt??0;$('mPlanBcm').value=m.plan_bcm??0;$('mActualBcm').value=m.actual_bcm??0;$('mDensity').value=m.density_wmt_per_bcm??'';$('mRemarks').value=m.remarks||'';$('movementFormMode').textContent='Mode: Editing movement '+m.id;$('saveMovement').textContent='Update Movement';$('mDate').focus();document.querySelector('#page-database .card:nth-of-type(3)').scrollIntoView({behavior:'smooth',block:'start'});return;
+ }
+ if(del){if(!requireCloud())return;if(!confirm('Delete this movement record permanently?'))return;
+  try{const {data,error}=await sb.from('dump_daily').delete().eq('id',del.dataset.deleteMovement).select('id');if(error)throw error;if(!data||!data.length)throw new Error('No row was deleted. Check login session and DELETE policy.');await loadCloud();alert('Movement record deleted successfully.');}catch(err){alert('Delete movement failed: '+err.message)}
+ }
+});
+$('equipmentCrudTable').addEventListener('click',async e=>{
+ const edit=e.target.closest('[data-edit-equipment]'),del=e.target.closest('[data-delete-equipment]');
+ if(edit){const a=equipmentRows.find(x=>String(x.id)===String(edit.dataset.editEquipment));if(!a)return;
+  fillDumpSelects();$('eEditId').value=a.id;$('eDate').value=a.activity_date||'';$('eDump').value=a.dump_id;$('eContractor').value=a.contractor||'';$('eEquipmentId').value=a.equipment_id||'';$('eEquipmentType').value=a.equipment_type||'';$('eHours').value=a.operating_hours??0;$('eTrips').value=a.trips??0;$('ePayload').value=a.payload_wmt??0;$('eRemarks').value=a.remarks||'';$('equipmentFormMode').textContent='Mode: Editing activity '+a.id;$('saveEquipment').textContent='Update Equipment';document.querySelector('#page-database .card:nth-of-type(5)').scrollIntoView({behavior:'smooth',block:'start'});return;
+ }
+ if(del){if(!requireCloud())return;if(!confirm('Delete this equipment activity permanently?'))return;
+  try{const {data,error}=await sb.from('dump_equipment').delete().eq('id',del.dataset.deleteEquipment).select('id');if(error)throw error;if(!data||!data.length)throw new Error('No row was deleted. Check login session and DELETE policy.');await loadCloud();alert('Equipment activity deleted successfully.');}catch(err){alert('Delete equipment failed: '+err.message)}
+ }
+});
+document.getElementById('dailyRate').oninput=render;
+document.getElementById('exportCsv').onclick=()=>{let lines=[['Dump ID','Dump Name','Pit','Capacity WMT','Actual WMT','Remaining WMT','Utilization %'],...dumps.map(d=>[d.dump_id,d.name,d.pit,d.capacity_wmt,d.actual_wmt,d.capacity_wmt-d.actual_wmt,(d.actual_wmt/d.capacity_wmt*100).toFixed(1)])];let csv=lines.map(r=>r.join(',')).join('\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='dump_capacity_report.csv';a.click();URL.revokeObjectURL(a.href)};
+function refreshMapMarkers(){if(!mapObj||!window.L)return;if(mapMarkers)mapMarkers.clearLayers();else mapMarkers=L.layerGroup().addTo(mapObj);dumps.filter(d=>Number.isFinite(d.lat)&&Number.isFinite(d.lon)).forEach(d=>L.marker([d.lat,d.lon]).addTo(mapMarkers).bindPopup(`<b>${esc(d.name)}</b><br>${esc(d.pit)}<br>Actual: ${fmt(d.actual_wmt)} WMT<br>Capacity: ${fmt(d.capacity_wmt)} WMT`));if(dumps.length){const pts=dumps.filter(d=>Number.isFinite(d.lat)&&Number.isFinite(d.lon)).map(d=>[d.lat,d.lon]);if(pts.length)mapObj.fitBounds(pts,{padding:[25,25],maxZoom:14})}}
+function initMap(){if(mapObj||!window.L)return;mapObj=L.map('map').setView([-0.625,127.425],13);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(mapObj);refreshMapMarkers();setTimeout(()=>mapObj.invalidateSize(),150)}
+function init3D(){const el=document.getElementById('scene');if(sceneState||!window.THREE)return;let w=el.clientWidth,h=el.clientHeight;const scene=new THREE.Scene();scene.background=new THREE.Color(0x102033);const camera=new THREE.PerspectiveCamera(45,w/h,.1,1000);camera.position.set(7,7,9);const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(w,h);renderer.setPixelRatio(Math.min(devicePixelRatio,2));el.appendChild(renderer.domElement);scene.add(new THREE.AmbientLight(0xffffff,.7));let light=new THREE.DirectionalLight(0xffffff,1.2);light.position.set(5,10,6);scene.add(light);
+const n=90,geo=new THREE.PlaneGeometry(8,8,n,n);geo.rotateX(-Math.PI/2);let p=geo.attributes.position;for(let i=0;i<p.count;i++){let x=p.getX(i),z=p.getZ(i);let r=Math.sqrt(x*x+z*z);let terrace=Math.max(0,2.2-r);let stepped=Math.floor(terrace*3)/3;p.setY(i,stepped*.8+Math.sin(x*2)*.08+Math.cos(z*2)*.07)}geo.computeVertexNormals();const mat=new THREE.MeshStandardMaterial({color:0x8b9b83,roughness:.95,flatShading:true,side:THREE.DoubleSide});const mesh=new THREE.Mesh(geo,mat);scene.add(mesh);const grid=new THREE.GridHelper(9,18,0x4c7182,0x294356);grid.position.y=-.03;scene.add(grid);camera.lookAt(0,.4,0);let down=false,px=0,py=0;renderer.domElement.addEventListener('pointerdown',e=>{down=true;px=e.clientX;py=e.clientY});window.addEventListener('pointerup',()=>down=false);renderer.domElement.addEventListener('pointermove',e=>{if(!down)return;let dx=e.clientX-px,dy=e.clientY-py;mesh.rotation.y+=dx*.008;mesh.rotation.x+=dy*.004;px=e.clientX;py=e.clientY});renderer.domElement.addEventListener('wheel',e=>{camera.position.multiplyScalar(e.deltaY>0?1.08:.92);camera.position.clampLength(5,20)});function loop(){if(!document.getElementById('page-threeD').classList.contains('hidden'))renderer.render(scene,camera);requestAnimationFrame(loop)}loop();sceneState={scene,camera,renderer,mesh};document.getElementById('resetScene').onclick=()=>{mesh.rotation.set(0,0,0);camera.position.set(7,7,9);camera.lookAt(0,.4,0)}}
+document.getElementById('langBtn').onclick=()=>alert('Language selector placeholder: English / Bahasa Indonesia.');
+$('connectSb').onclick=async()=>{const url=$('sbUrl').value.trim(),key=$('sbKey').value.trim();if(!url||!key)return alert('Enter Supabase Project URL and publishable/anon key.');try{sb=window.supabase.createClient(url,key);const {error}=await sb.from('dump_master').select('dump_id').limit(1);if(error)throw error;$('connection').textContent='● Supabase Connected';$('connection').style.color='var(--green)';setDbStatus('Connected. Sign in to load and manage cloud records.');const {data}=await sb.auth.getSession();if(data.session){$('authStatus').textContent='Signed in: '+data.session.user.email;await loadCloud()}else $('authStatus').textContent='Connected. Not signed in.';alert('Supabase connection successful. Sign in to use live database CRUD.')}catch(e){sb=null;$('connection').textContent='● Connection Error';setDbStatus(e.message,true);alert('Connection failed: '+e.message)}};
+$('disconnectSb').onclick=async()=>{if(sb)await sb.auth.signOut();sb=null;$('connection').textContent='● Offline Demo';$('sbKey').value='';$('authStatus').textContent='Signed out.';setDbStatus('Disconnected from Supabase.')};
+$('signIn').onclick=async()=>{if(!sb)return alert('Connect Supabase first.');const {data,error}=await sb.auth.signInWithPassword({email:$('authEmail').value,password:$('authPassword').value});$('authStatus').textContent=error?error.message:'Signed in: '+data.user.email;if(!error){try{await loadCloud()}catch(e){setDbStatus(e.message,true);alert(e.message)}}};
+$('signUp').onclick=async()=>{if(!sb)return alert('Connect Supabase first.');const {data,error}=await sb.auth.signUp({email:$('authEmail').value,password:$('authPassword').value});$('authStatus').textContent=error?error.message:'Registration submitted. Check email if confirmation is enabled.'};
+$('signOut').onclick=async()=>{if(sb)await sb.auth.signOut();$('authStatus').textContent='Signed out.';setDbStatus('Signed out. Cloud records are no longer editable.')};
+if(window.supabase?.createClient){$('connection').textContent='● Not connected';}
+render();renderCrudTables();
+</script>
+</body></html>
